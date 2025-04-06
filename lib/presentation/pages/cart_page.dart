@@ -3,31 +3,24 @@ import 'package:provider/provider.dart';
 import 'package:flutter_navegacion/presentation/providers/cart_provider.dart';
 
 class CartPage extends StatelessWidget {
+  const CartPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    // Obtiene la instancia de CartProvider y se suscribe a cambios
-    // Cuando notifyListeners() se llama en el provider, este widget se reconstruye
     final cartProvider = Provider.of<CartProvider>(context);
-    // Accede a la lista actual de productos en el carrito
     final cartItems = cartProvider.cartItems;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mi Carrito'),
+        title: const Text('Mi Carrito'),
         actions: [
-          // Muestra el botón de vaciar carrito solo si hay items
           if (cartItems.isNotEmpty)
             IconButton(
-              icon: Icon(Icons.delete),
+              icon: const Icon(Icons.delete),
               onPressed: () {
-                // Llama al método clearCart() del provider
                 cartProvider.clearCart();
-                // Muestra un mensaje temporal
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Carrito vaciado'),
-                    duration: Duration(seconds: 2),
-                  ),
+                  const SnackBar(content: Text('Carrito vaciado')),
                 );
               },
             ),
@@ -35,105 +28,129 @@ class CartPage extends StatelessWidget {
       ),
       body:
           cartItems.isEmpty
-              ? Center(
-                // Muestra estado vacío si no hay productos
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.shopping_cart_outlined,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Tu carrito está vacío',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              )
+              ? _buildEmptyCart()
               : ListView.builder(
-                // Construye la lista de productos en el carrito
                 itemCount: cartItems.length,
                 itemBuilder: (context, index) {
                   final item = cartItems[index];
-                  return Dismissible(
-                    // Widget que se puede deslizar para eliminar
-                    key: Key(item['name']), // Clave única para cada item
-                    direction:
-                        DismissDirection
-                            .endToStart, // Dirección del deslizamiento
-                    background: Container(
-                      // Fondo que aparece al deslizar
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 20),
-                      child: Icon(Icons.delete, color: Colors.white),
-                    ),
-                    onDismissed: (_) {
-                      // Acción al deslizar: elimina el producto
-                      cartProvider.removeItem(index);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${item['name']} eliminado'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                    child: Card(
-                      // Tarjeta que muestra cada producto
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Nombre del producto
-                            Text(
-                              item['name'],
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            // Contador de cantidad
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.blue[50],
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    'Cant: ',
-                                    style: TextStyle(
-                                      color: Colors.blue[800],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    item['quantity'].toString(),
-                                    style: TextStyle(
-                                      color: Colors.blue[800],
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
+                  return _buildCartItem(item, index, context);
                 },
               ),
+    );
+  }
+
+  Widget _buildEmptyCart() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'Tu carrito está vacío',
+            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCartItem(
+    Map<String, dynamic> item,
+    int index,
+    BuildContext context,
+  ) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Imagen del producto
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                image: DecorationImage(
+                  image: AssetImage(
+                    item['image'] ?? 'assets/images/default_product.png',
+                  ),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // Nombre y controles de cantidad
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['name'],
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _buildQuantityControls(item, index, context),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuantityControls(
+    Map<String, dynamic> item,
+    int index,
+    BuildContext context,
+  ) {
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.remove, size: 18),
+            onPressed: () {
+              if (item['quantity'] > 1) {
+                cartProvider.updateQuantity(index, item['quantity'] - 1);
+              } else {
+                cartProvider.removeItem(index);
+              }
+            },
+            padding: EdgeInsets.zero,
+          ),
+
+          Text(
+            '${item['quantity']}',
+            style: TextStyle(
+              color: Colors.blue[800],
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          IconButton(
+            icon: const Icon(Icons.add, size: 18),
+            onPressed: () {
+              cartProvider.updateQuantity(index, item['quantity'] + 1);
+            },
+            padding: EdgeInsets.zero,
+          ),
+        ],
+      ),
     );
   }
 }

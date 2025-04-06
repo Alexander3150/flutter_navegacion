@@ -18,7 +18,7 @@ class CartProvider extends ChangeNotifier {
   /// - 'quantity': int (cantidad)
   /// - 'image': String (ruta de la imagen)
   /// - 'addedAt': DateTime (fecha/hora de agregado)
-  final List<Map<String, dynamic>> _cartItems = [];
+  List<Map<String, dynamic>> _cartItems = [];
 
   // ========== GETTERS ==========
 
@@ -50,7 +50,7 @@ class CartProvider extends ChangeNotifier {
   /// Agrega un producto al carrito o incrementa su cantidad si ya existe
   /// [productName]: Nombre del producto a agregar
   /// [imagePath]: Ruta de la imagen del producto
-  void addItem(String productName, {String? imagePath}) {
+  void addItem(String productName, String imagePath) {
     final existingIndex = _cartItems.indexWhere(
       (item) => item['name'] == productName,
     );
@@ -60,8 +60,8 @@ class CartProvider extends ChangeNotifier {
     } else {
       _cartItems.add({
         'name': productName,
+        'image': imagePath, // Guarda la ruta de la imagen
         'quantity': 1,
-        'image': imagePath,
         'addedAt': DateTime.now(),
       });
     }
