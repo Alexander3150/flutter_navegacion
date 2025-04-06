@@ -6,8 +6,8 @@ class ProductListPage extends StatefulWidget {
 }
 
 class _ProductListPageState extends State<ProductListPage> {
+  // Lista de productos disponibles
   final List<String> products = [
-    // Lista final
     'Camiseta Reactiva',
     'Zapatos Voladores',
     'Gorra Inteligente',
@@ -25,36 +25,28 @@ class _ProductListPageState extends State<ProductListPage> {
     return Scaffold(
       appBar: AppBar(title: Text('Productos Ficticios'), centerTitle: true),
 
-      /**
-       * LISTA DE PRODUCTOS:
-       * 
-       * Muestra los productos en formato de lista desplazable.
-       * Cada item es una Card que contiene:
-       * - Nombre del producto
-       * - Icono indicador de navegación
-       */
+      // ListView.builder es eficiente para listas largas (renderiza solo lo visible)
       body: ListView.builder(
-        itemCount: products.length,
+        itemCount: products.length, // Total de productos
         itemBuilder: (context, index) {
+          // Obtiene el producto actual basado en el índice
           final product = products[index];
 
           return Card(
+            // Margen alrededor de cada Card
             margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
             child: ListTile(
+              // Nombre del producto
               title: Text(product, style: TextStyle(fontSize: 18.0)),
+              // Icono indicador de navegación
               trailing: Icon(Icons.arrow_forward_ios),
-
-              /**
-               * NAVEGACIÓN A PANTALLA DE DETALLE:
-               * 
-               * Al seleccionar un producto, navega a la pantalla de detalle
-               * enviando solo el nombre del producto como argumento (String).
-               */
               onTap: () {
+                // Navega a la página de detalle del producto
                 Navigator.pushNamed(
                   context,
-                  '/productDetail',
-                  arguments: product, // Solo envía el nombre como String
+                  '/productDetail', // Ruta definida en MaterialApp
+                  arguments:
+                      product, // Envía el nombre del producto como argumento
                 );
               },
             ),

@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_navegacion/presentation/providers/cart_provider.dart';
 
 class ProductDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    /**
-     * OBTENCIÓN DEL NOMBRE DEL PRODUCTO:
-     * 
-     * Recupera el nombre del producto pasado como argumento.
-     * Se hace casting directo a String ya que siempre recibiremos
-     * un nombre válido de la lista principal.
-     */
+    // Obtiene el nombre del producto pasado como argumento de navegación
     final String productName =
         ModalRoute.of(context)?.settings.arguments as String;
 
@@ -18,17 +14,16 @@ class ProductDetailPage extends StatelessWidget {
         title: Text('Detalles del Producto'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context), // Navega back
         ),
       ),
-
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Style
+              // Título del producto
               Text(
                 productName,
                 style: TextStyle(
@@ -40,7 +35,7 @@ class ProductDetailPage extends StatelessWidget {
               ),
 
               SizedBox(height: 20.0), // Espaciador
-              //Imagen de producto prueba
+              // Placeholder de imagen del producto
               Container(
                 height: 200.0,
                 decoration: BoxDecoration(
@@ -55,7 +50,7 @@ class ProductDetailPage extends StatelessWidget {
               ),
 
               SizedBox(height: 30.0), // Espaciador
-              //Justificado mediante Aling.justify
+              // Descripción del producto
               Text(
                 'Descripción detallada del producto $productName. '
                 'Este artículo exclusivo ofrece características únicas '
@@ -63,6 +58,43 @@ class ProductDetailPage extends StatelessWidget {
                 'de calidad para garantizar durabilidad y rendimiento.',
                 style: TextStyle(fontSize: 16.0),
                 textAlign: TextAlign.justify,
+              ),
+
+              SizedBox(height: 40.0), // Espaciador
+              // Botón para añadir al carrito
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 40.0,
+                    vertical: 15.0,
+                  ),
+                ),
+                onPressed: () {
+                  // Obtiene el CartProvider sin suscribirse a cambios (listen: false)
+                  final cartProvider = Provider.of<CartProvider>(
+                    context,
+                    listen: false,
+                  );
+
+                  // Añade el producto al carrito
+                  cartProvider.addItem(productName);
+
+                  // Muestra feedback al usuario
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('$productName añadido al carrito'),
+                      duration: Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+
+                  // Regresa a la pantalla anterior
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Añadir al carrito',
+                  style: TextStyle(fontSize: 18.0),
+                ),
               ),
             ],
           ),
