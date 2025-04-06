@@ -16,6 +16,8 @@ class CartProvider extends ChangeNotifier {
   /// Cada producto es un mapa con:
   /// - 'name': String (nombre del producto)
   /// - 'quantity': int (cantidad)
+  /// - 'image': String (ruta de la imagen)
+  /// - 'addedAt': DateTime (fecha/hora de agregado)
   final List<Map<String, dynamic>> _cartItems = [];
 
   // ========== GETTERS ==========
@@ -26,6 +28,14 @@ class CartProvider extends ChangeNotifier {
   /// Obtiene una copia de la lista de productos del carrito (solo lectura)
   List<Map<String, dynamic>> get cartItems => List.from(_cartItems);
 
+  /// Obtiene el total de items en el carrito (suma de cantidades)
+  int get totalItems =>
+      _cartItems.fold(0, (sum, item) => sum + (item['quantity'] as int));
+
+  /// Obtiene el último producto añadido
+  Map<String, dynamic>? get lastAdded =>
+      _cartItems.isNotEmpty ? _cartItems.last : null;
+
   // ========== MÉTODOS PÚBLICOS ==========
 
   /// Cambia la pestaña seleccionada y notifica a los listeners
@@ -33,27 +43,28 @@ class CartProvider extends ChangeNotifier {
   void changeTab(int index) {
     if (_currentTabIndex != index) {
       _currentTabIndex = index;
-      // Notifica a todos los widgets que escuchan este provider
       notifyListeners();
     }
   }
 
   /// Agrega un producto al carrito o incrementa su cantidad si ya existe
   /// [productName]: Nombre del producto a agregar
-  void addItem(String productName) {
-    // Busca si el producto ya existe en el carrito
+  /// [imagePath]: Ruta de la imagen del producto
+  void addItem(String productName, {String? imagePath}) {
     final existingIndex = _cartItems.indexWhere(
       (item) => item['name'] == productName,
     );
 
     if (existingIndex >= 0) {
-      // Si existe, incrementa la cantidad
       _cartItems[existingIndex]['quantity']++;
     } else {
-      // Si no existe, lo agrega con cantidad 1
-      _cartItems.add({'name': productName, 'quantity': 1});
+      _cartItems.add({
+        'name': productName,
+        'quantity': 1,
+        'image': imagePath,
+        'addedAt': DateTime.now(),
+      });
     }
-    // Notifica a los widgets sobre el cambio
     notifyListeners();
   }
 
@@ -66,9 +77,32 @@ class CartProvider extends ChangeNotifier {
     }
   }
 
+  /// Elimina el último producto añadido al carrito
+  void removeLastAdded() {
+    if (_cartItems.isNotEmpty) {
+      _cartItems.removeLast();
+      notifyListeners();
+    }
+  }
+
   /// Vacía completamente el carrito
   void clearCart() {
     _cartItems.clear();
     notifyListeners();
+  }
+
+  /// Actualiza la cantidad de un producto específico
+  /// [index]: Posición del producto en la lista
+  /// [newQuantity]: Nueva cantidad (debe ser al menos 1)
+  void updateQuantity(int index, int newQuantity) {
+    if (index >= 0 && index < _cartItems.length && newQuantity >= 1) {
+      _cartItems[index]['quantity'] = newQuantity;
+      notifyListeners();
+    }
+  }
+
+  /// Verifica si un producto ya existe en el carrito
+  bool containsProduct(String productName) {
+    return _cartItems.any((item) => item['name'] == productName);
   }
 }
